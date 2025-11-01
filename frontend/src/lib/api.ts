@@ -5,13 +5,6 @@ import type {
   Candle
 } from '@/types/backtest';
 
-const apiBase = (process.env.NEXT_PUBLIC_API_BASE_URL ?? '').replace(/\/$/, '');
-
-function resolveApiUrl(path: string): string {
-  const normalizedPath = path.startsWith('/') ? path : `/${path}`;
-  return apiBase ? `${apiBase}${normalizedPath}` : normalizedPath;
-}
-
 export interface CandlesRequest {
   instrumentName: string;
   interval: string;
@@ -67,7 +60,7 @@ export async function fetchCandlesForConfig(config: BacktestConfig): Promise<Can
     end: config.end
   });
 
-  const response = await fetch(resolveApiUrl(`/api/candles?${query}`));
+  const response = await fetch(`/api/candles?${query}`);
   if (!response.ok) {
     throw new Error(`Failed to fetch candles (${response.status})`);
   }
@@ -86,7 +79,7 @@ export async function fetchCandlesForConfig(config: BacktestConfig): Promise<Can
 export async function runBacktest(
   payload: BacktestRequestBody
 ): Promise<BacktestResponseBody> {
-  const response = await fetch(resolveApiUrl('/api/backtest'), {
+  const response = await fetch('/api/backtest', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json'
