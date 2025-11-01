@@ -1,5 +1,3 @@
-export type BacktestPhase = 'idle' | 'fetchingCandles' | 'runningBacktest';
-
 export interface BacktestConfig {
   instrumentName: string;
   interval: string;
