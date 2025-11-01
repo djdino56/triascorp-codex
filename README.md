@@ -69,15 +69,15 @@ Key scripts:
 
 ## Running Backend and Frontend Together
 
-1. Start the Python backend (expose REST endpoints under `http://localhost:8000/api`). A small
-   standard-library server is bundled with the project:
+1. Start the Python backend (expose REST endpoints under `http://localhost:8000/api`). For
+   example, if you wire the backtester into a FastAPI app, run it with `uvicorn`:
 
    ```bash
-   python -m backtester.http
+   uvicorn backtester.http:app --reload --port 8000
    ```
 
-   The server listens on `127.0.0.1:8000` by default. Update the target or port in
-   `frontend/next.config.js` if your API lives elsewhere.
+   Replace `backtester.http:app` with the module path to your ASGI application. Update the
+   target or port in `frontend/next.config.js` if your API lives elsewhere.
 
 2. In another terminal, launch the Next.js frontend:
 
@@ -88,14 +88,3 @@ Key scripts:
 
 During development, frontend requests to `/api/*` are transparently proxied to the Python service via
 Next.js `rewrites`, letting you call backend REST endpoints without CORS headaches.
-
-## HTTP API
-
-The `backtester.http` module serves two JSON endpoints that the frontend consumes via the Next.js
-proxy:
-
-- `GET /api/candles`: accepts query parameters `instrument_name`, `resolution`, and optional `start`
-  / `end` ISO-8601 timestamps. Returns a JSON payload containing an array of OHLCV candles.
-- `POST /api/backtest`: accepts a JSON body with `config` (matching the frontend form fields) and
-  an optional `candles` array. If candles are omitted the backend will fetch them before executing
-  the strategy and returning a report with trades, win/loss counts, and balances.
