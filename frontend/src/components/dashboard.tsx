@@ -5,6 +5,7 @@ import { useState } from 'react';
 import { CandlesChart } from '@/components/candles-chart';
 import { ParametersForm } from '@/components/parameters-form';
 import { ResultsTable } from '@/components/results-table';
+import { fetchCandlesForConfig, runBacktest } from '@/lib/api';
 import type { BacktestConfig, BacktestPhase, BacktestReport, Candle } from '@/types/backtest';
 
 const defaultConfig: BacktestConfig = {
@@ -27,6 +28,34 @@ export function Dashboard() {
   const [report, setReport] = useState<BacktestReport | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  const handleSubmit = async (config: BacktestConfig) => {
+    setLastConfig(config);
+    setError(null);
+    setReport(null);
+    setPhase('fetchingCandles');
+    setCandles([]);
+
+    try {
+      const fetchedCandles = await fetchCandlesForConfig(config);
+      setCandles(fetchedCandles);
+
+      if (!fetchedCandles.length) {
+        setPhase('idle');
+        return;
+      }
+
+      setPhase('runningBacktest');
+      const response = await runBacktest({ config, candles: fetchedCandles });
+      setReport(response.report);
+    } catch (caught) {
+      const message =
+        caught instanceof Error ? caught.message : 'Unexpected error while running backtest';
+      setError(message);
+    } finally {
+      setPhase('idle');
+    }
+  };
+
   return (
     <section style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
       <header style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
@@ -39,16 +68,7 @@ export function Dashboard() {
       </header>
 
       <div className="card-grid">
-        <ParametersForm
-          defaultValues={lastConfig}
-          phase={phase}
-          error={error}
-          onConfigChange={setLastConfig}
-          onPhaseChange={setPhase}
-          onErrorChange={setError}
-          onCandlesChange={setCandles}
-          onReportChange={setReport}
-        />
+        <ParametersForm defaultValues={lastConfig} phase={phase} error={error} onSubmit={handleSubmit} />
         <div className="card">
           <h2>Strategy Metrics</h2>
           <div className="placeholder">
